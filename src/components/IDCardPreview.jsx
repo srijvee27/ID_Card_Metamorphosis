@@ -60,28 +60,37 @@ const IDCardPreview = forwardRef(function IDCardPreview(
         </div>
 
         {/* Layer 3: Central Circular Employee Photo Frame */}
-        {/* Positioned inside the white central arch contour */}
-        <div className="absolute top-[214px] left-[137px] w-[364px] h-[364px] z-20">
-          <div className="relative w-full h-full rounded-full bg-white overflow-hidden shadow-sm">
-            {activePhoto ? (
-              <img
-                src={activePhoto}
-                alt={employee.name || 'Employee Photo'}
-                className="w-full h-full object-cover transition-transform duration-75 ease-out select-none"
-                style={{
-                  transform: `translate(${employee.photoOffsetX || 0}px, ${
-                    employee.photoOffsetY || 0
-                  }px) scale(${employee.photoScale || 1.0})`,
-                  transformOrigin: 'center center',
-                }}
-                draggable={false}
-              />
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400">
-                <span className="text-4xl font-light">Photo</span>
-              </div>
-            )}
-          </div>
+        {/* Positioned inside the white central arch contour with ONLY outer circular frame clipping */}
+        <div
+          className="absolute top-[214px] left-[137px] w-[364px] h-[364px] rounded-full bg-white overflow-hidden shadow-sm z-20"
+          style={{
+            borderRadius: '50%',
+            overflow: 'hidden',
+            backgroundColor: '#FFFFFF',
+          }}
+        >
+          {activePhoto ? (
+            <img
+              src={activePhoto}
+              alt={employee.name || 'Employee Photo'}
+              className="w-full h-full object-contain transition-transform duration-75 ease-out select-none"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                objectPosition: 'center bottom',
+                transform: `translate(${employee.photoOffsetX || 0}px, ${
+                  employee.photoOffsetY || 0
+                }px) scale(${employee.photoScale || 1.0})`,
+                transformOrigin: 'center center',
+              }}
+              draggable={false}
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-400">
+              <span className="text-4xl font-light">Photo</span>
+            </div>
+          )}
         </div>
 
         {/* Layer 4: Centered Dynamic Text Fields (Bottom White Section) */}

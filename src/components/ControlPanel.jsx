@@ -345,9 +345,9 @@ export default function ControlPanel({
             </div>
             <input
               type="range"
-              min="0.6"
-              max="2.5"
-              step="0.02"
+              min="0.2"
+              max="3.0"
+              step="0.01"
               value={employee.photoScale || 1.0}
               onChange={(e) => handleInputChange('photoScale', parseFloat(e.target.value))}
               className="w-full accent-[#EA6A2A] cursor-pointer"
@@ -364,8 +364,8 @@ export default function ControlPanel({
             </div>
             <input
               type="range"
-              min="-120"
-              max="120"
+              min="-200"
+              max="200"
               step="1"
               value={employee.photoOffsetX || 0}
               onChange={(e) => handleInputChange('photoOffsetX', parseInt(e.target.value, 10))}
@@ -383,8 +383,8 @@ export default function ControlPanel({
             </div>
             <input
               type="range"
-              min="-120"
-              max="120"
+              min="-200"
+              max="200"
               step="1"
               value={employee.photoOffsetY || 0}
               onChange={(e) => handleInputChange('photoOffsetY', parseInt(e.target.value, 10))}

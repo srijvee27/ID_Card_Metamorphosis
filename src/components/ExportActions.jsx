@@ -40,14 +40,14 @@ export default function ExportActions({
   };
 
   // 3. Download Adobe Illustrator .ai
-  const handleDownloadAi = () => {
+  const handleDownloadAi = async () => {
     try {
       setIsExportingAi(true);
-      downloadCardAsAi(employee);
+      await downloadCardAsAi(employee);
     } catch (err) {
       console.error('Adobe Illustrator .ai export failed:', err);
     } finally {
-      setTimeout(() => setIsExportingAi(false), 600);
+      setIsExportingAi(false);
     }
   };
 
