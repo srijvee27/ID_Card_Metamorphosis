@@ -55,8 +55,21 @@ export async function downloadCardAsPng(cardElement, employeeName = 'Employee') 
 }
 
 /**
+ * Helper to escape special XML characters
+ */
+function escapeXml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+/**
  * 2. Exports the ID card DOM element as a standard CR80 print-ready PDF
- * (53.98mm x 85.60mm standard physical credit card / CR80 ID dimensions)
+ * (53.98mm x 85.60mm standard physical credit card / CR80 ID dimensions at 300+ DPI)
  * @param {HTMLElement} cardElement 
  * @param {string} employeeName 
  */
@@ -81,6 +94,13 @@ export async function downloadCardAsPdf(cardElement, employeeName = 'Employee') 
     compress: true,
   });
 
+  pdf.setProperties({
+    title: `metamorphosis ID Card - ${employeeName}`,
+    subject: 'CR80 Standard Print-Ready ID Card',
+    author: 'metamorphosis',
+    creator: 'metamorphosis ID Card Generator',
+  });
+
   pdf.addImage(
     dataUrl,
     'PNG',
@@ -89,11 +109,15 @@ export async function downloadCardAsPdf(cardElement, employeeName = 'Employee') 
     CR80_DIMENSIONS.physicalWidthMm,
     CR80_DIMENSIONS.physicalHeightMm,
     undefined,
-    'FAST'
+    'SLOW'
   );
 
-  const sanitized = employeeName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'Employee';
-  const filename = `metamorphosis_ID_${sanitized}.pdf`;
+  const sanitized = employeeName
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '') || 'employee';
+  const filename = `metamorphosis-id-card-${sanitized}.pdf`;
 
   pdf.save(filename);
   fireConfetti();
@@ -101,18 +125,25 @@ export async function downloadCardAsPdf(cardElement, employeeName = 'Employee') 
 
 /**
  * 3. Exports the ID card as a clean vector Adobe Illustrator .ai file
- * (Native SVG vector specification with live/outlined text and embedded high-DPI photo,
- * packaged as an Adobe Illustrator file for zero quality loss and vector editability)
+ * (Self-contained vector SVG specification with live and outlined typography,
+ * custom curve paths, ribbon logo, and embedded photo, allowing Adobe Illustrator
+ * to open and print natively as editable vector artwork with zero loss in quality)
  * @param {object} employee 
  * @param {string} activePhoto 
  */
 export function downloadCardAsAi(employee, activePhoto) {
   const photo = activePhoto || employee?.photoBase64 || employee?.originalPhotoBase64 || '';
-  const name = employee?.name || 'Mir Mynul Islam';
-  const designation = employee?.designation || 'Deputy Manager';
-  const nid = employee?.nid ? `NID: ${employee.nid}` : 'NID: 3718652691';
-  const blood = employee?.bloodGroup ? `Blood: ${employee.bloodGroup}` : 'Blood: B+';
-  const phone = employee?.phone ? `Phone: ${employee.phone}` : 'Phone: 01703 887 655';
+  const rawName = employee?.name || 'Mir Mynul Islam';
+  const rawDesignation = employee?.designation || 'Deputy Manager';
+  const rawNid = employee?.nid ? `NID: ${employee.nid}` : 'NID: 3718652691';
+  const rawBlood = employee?.bloodGroup ? `Blood: ${employee.bloodGroup}` : 'Blood: B+';
+  const rawPhone = employee?.phone ? `Phone: ${employee.phone}` : 'Phone: 01703 887 655';
+
+  const name = escapeXml(rawName);
+  const designation = escapeXml(rawDesignation);
+  const nid = escapeXml(rawNid);
+  const blood = escapeXml(rawBlood);
+  const phone = escapeXml(rawPhone);
 
   const offsetX = employee?.photoOffsetX || 0;
   const offsetY = employee?.photoOffsetY || 0;
@@ -125,8 +156,8 @@ export function downloadCardAsAi(employee, activePhoto) {
   const imgY = 396 - imgHeight / 2 + offsetY;
 
   const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<!-- Generator: Adobe Illustrator / metamorphosis ID Card Generator -->
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 638 1012" width="638pt" height="1012pt">
+<!-- Generator: Adobe Illustrator / metamorphosis Vector ID Card Generator -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 638 1012" width="638" height="1012" xml:space="preserve">
   <defs>
     <style type="text/css">
       @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;700&amp;family=Outfit:wght@400;700&amp;display=swap');
@@ -150,10 +181,10 @@ export function downloadCardAsAi(employee, activePhoto) {
   </defs>
 
   <g clip-path="url(#aiCardCornerClip)">
-    <!-- Top Vibrant Orange Background -->
+    <!-- Top Vibrant Orange Section (#EA6A2A) -->
     <rect width="638" height="1012" class="cls-bg-orange" />
 
-    <!-- Wave Transition to Pure White -->
+    <!-- Wave Transition to Pure White (#FFFFFF) -->
     <path d="${WAVE_PATH_DATA}" class="cls-bg-white" />
 
     <!-- Brand Header -->
@@ -171,7 +202,7 @@ export function downloadCardAsAi(employee, activePhoto) {
     <!-- Circular Photo Frame -->
     <circle cx="319" cy="396" r="182" class="cls-bg-white" />
     <g clip-path="url(#aiPhotoCircleClip)">
-      <image href="${photo}" x="${imgX}" y="${imgY}" width="${imgWidth}" height="${imgHeight}" preserveAspectRatio="xMidYMid slice" />
+      <image href="${photo}" xlink:href="${photo}" x="${imgX}" y="${imgY}" width="${imgWidth}" height="${imgHeight}" preserveAspectRatio="xMidYMid slice" />
     </g>
 
     <!-- Centered Typography (Lines 1 to 5) -->
@@ -186,10 +217,15 @@ export function downloadCardAsAi(employee, activePhoto) {
   </g>
 </svg>`;
 
-  const sanitized = name.replace(/[^a-zA-Z0-9_-]/g, '_') || 'Employee';
+  const sanitized = rawName
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9_-]/g, '') || 'employee';
   const filename = `metamorphosis-id-card-${sanitized}.ai`;
 
-  const blob = new Blob([svgContent], { type: 'application/illustrator;charset=utf-8' });
+  // Provide SVG vector data with image/svg+xml MIME type so Illustrator loads native vector curves
+  const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.download = filename;
@@ -201,3 +237,4 @@ export function downloadCardAsAi(employee, activePhoto) {
 
   fireConfetti();
 }
+
